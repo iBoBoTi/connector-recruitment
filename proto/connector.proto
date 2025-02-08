@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package connector.v1;
+
+option go_package = "github.com/iBoBoTi/connector-service/gen/connector/v1";
+
+// The Slack Connector gRPC service.
+service SlackConnectorService {
+  // Creates a new Slack connector. 
+  rpc CreateConnector(CreateConnectorRequest) returns (CreateConnectorResponse);
+
+  // Retrieves an existing Slack connector by ID.
+  rpc GetConnector(GetConnectorRequest) returns (GetConnectorResponse);
+
+  // Deletes a Slack connector by ID.
+  rpc DeleteConnector(DeleteConnectorRequest) returns (DeleteConnectorResponse);
+}
+
+message CreateConnectorRequest {
+  string workspace_id = 1; 
+  string tenant_id = 2;
+  string default_channel_name = 3;
+  string slack_token = 4;
+}
+
+message CreateConnectorResponse {
+  Connector connector = 1;
+}
+
+message GetConnectorRequest {
+  string connector_id = 1;
+}
+
+message GetConnectorResponse {
+  Connector connector = 1;
+}
+
+message DeleteConnectorRequest {
+  string connector_id = 1;
+}
+
+message DeleteConnectorResponse {
+  bool success = 1;
+}
+
+message Connector {
+  string id = 1;
+  string workspace_id = 2;
+  string tenant_id = 3;
+  string default_channel_id = 4;
+  string created_at = 5;
+  string updated_at = 6;
+}

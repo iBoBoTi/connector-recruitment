@@ -126,7 +126,7 @@ docker-compose up -d
 3. Run the server:
 
    ```bash
-   go run cmd/server/main.go
+   go run go-server/cmd/server/main.go
    ```
 
 The service should listen on `:50051` (or another configured port).
