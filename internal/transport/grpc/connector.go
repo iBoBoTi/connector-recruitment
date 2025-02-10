@@ -7,7 +7,7 @@ import (
 
 	connector_v1 "github.com/iBoBoTi/connector-service/gen/proto"
 	"github.com/iBoBoTi/connector-service/internal/domain"
-	"github.com/iBoBoTi/connector-service/usecase"
+	"github.com/iBoBoTi/connector-service/internal/usecase"
 )
 
 // SlackConnectorHandler implements connector.v1.SlackConnectorServiceServer.

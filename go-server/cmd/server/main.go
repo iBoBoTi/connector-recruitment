@@ -9,19 +9,19 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-	
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/pressly/goose/v3"
-	
+
 	"github.com/iBoBoTi/connector-service/config"
 	connector_v1 "github.com/iBoBoTi/connector-service/gen/proto"
 	"github.com/iBoBoTi/connector-service/internal/repository"
 	"github.com/iBoBoTi/connector-service/internal/services"
 	handler "github.com/iBoBoTi/connector-service/internal/transport/grpc"
+	"github.com/iBoBoTi/connector-service/internal/usecase"
 	"github.com/iBoBoTi/connector-service/pkg/db"
-	"github.com/iBoBoTi/connector-service/usecase"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
