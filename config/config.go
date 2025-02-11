@@ -32,31 +32,31 @@ type Config struct {
 
 // LoadConfig loads configuration from environment variables or defaults.
 func LoadConfig() *Config {
-	port, err := strconv.Atoi(getEnv("DB_PORT", "5432"))
+	port, err := strconv.Atoi(GetEnv("DB_PORT", "5432"))
 	if err != nil {
 		log.Fatalf("Invalid DB_PORT: %v", err)
 	}
 
 	return &Config{
 		DB: DBConfig{
-			Host:           getEnv("DB_HOST", "localhost"),
+			Host:           GetEnv("DB_HOST", "localhost"),
 			Port:           port,
-			User:           getEnv("DB_USER", "aryon"),
-			Password:       getEnv("DB_PASS", "aryon"),
-			Name:           getEnv("DB_NAME", "aryondb"),
-			MigrationsPath: getEnv("DB_MIGRATIONS_PATH", "migrations"),
+			User:           GetEnv("DB_USER", "aryon"),
+			Password:       GetEnv("DB_PASS", "aryon"),
+			Name:           GetEnv("DB_NAME", "aryondb"),
+			MigrationsPath: GetEnv("DB_MIGRATIONS_PATH", "migrations"),
 		},
 		GRPCServer: GRPCServerConfig{
-			Port: getEnv("GRPC_SERVER_PORT", "50051"),
+			Port: GetEnv("GRPC_SERVER_PORT", "50051"),
 		},
 		AWS: AWSConfig{
-			Endpoint: getEnv("AWS_ENDPOINT", "http://localhost:4566"),
-			Region:   getEnv("AWS_REGION", "us-east-1"),
+			Endpoint: GetEnv("AWS_ENDPOINT", "http://localhost:4566"),
+			Region:   GetEnv("AWS_REGION", "us-east-1"),
 		},
 	}
 }
 
-func getEnv(key, defaultVal string) string {
+func GetEnv(key, defaultVal string) string {
 	val := os.Getenv(key)
 	if val == "" {
 		return defaultVal

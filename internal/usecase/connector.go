@@ -58,8 +58,8 @@ func (s *connectorUsecase) CreateConnector(
 
 	channelID, err := s.slack.ResolveChannelID(ctx, slackToken, channelName)
 	if err != nil {
-		slog.Error("error resolving channel id", "error", err)
-		return nil, errors.ErrInternal
+		slog.Error("error resolving channel id using the channel name", "error", err)
+		return nil, errors.ErrInvalidArgument
 	}
 
 	now := time.Now()
