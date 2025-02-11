@@ -1,50 +1,4 @@
 # Connector Service (Go + Buf + LocalStack)
-
-- **Go** (for the service)
-- **Buf** (for Protobuf and gRPC code generation)
-- **LocalStack** (to mock AWS Secrets Manager)
-- **PostgreSQL** (optional, for additional data storage)
-
-## Table of Contents
-
-1. [Overview](#overview)
-2. [Features](#features)
-3. [Architecture](#architecture)
-4. [Prerequisites](#prerequisites)
-5. [Setup](#setup)
-6. [Buf Installation](#buf-installation)
-7. [Protobuf Generation](#protobuf-generation)
-8. [Docker Compose](#docker-compose)
-9. [Running the Service](#running-the-service)
-10. [Endpoints](#endpoints)
-
----
-
-## Requirements:
-
-## Overview
-
-The goal of this exercise is to implement a gRPC service that handles the lifecycle of "connectors" that integrate with
-Slack. A connector is a named entity that connects the system to a third party service such as slack.
-
-You are required to implement a connector service that does the following:
-
-- Stores static Slack tokens in AWS Secrets Manager (mocked via LocalStack).
-- Stores connector metadata in a PostgreSQL database.
-    - Workspace ID
-    - Tenant ID
-    - Created At
-    - Updated At
-    - Default Send Channel ID - Messages will be sent to this channel by default.
-- Provides endpoints to create, retrieve, and delete connectors.
-- A static Go function outside the service that takes a connector id and a string simple message and sends it to the
-  default configured channel. In addition to all other configuration parameters, such as aws config that is connected to localstack.
-  - You are free to model the configuration parameters as you see fit.
-
----
-
-## Features
-
 - **gRPC** service with three methods:
     - `CreateConnector` (You are given static access tokens and the default channel name(which needs to be resolved to its ID). See [Bonus](#bonus) for OAuthV2)
     - `GetConnector`
@@ -72,71 +26,135 @@ You are required to implement a connector service that does the following:
    +------------+
 ```
 
----
+# **Connector Service**
 
-## Prerequisites
-
-- **Go** (>= 1.18 recommended)
-- **Docker**
-- **Buf** (for protobuf generation)
-- **Slack token** (real or mocked)
+A Golang-based, clean-architecture application for managing Slack connectors. It stores static Slack tokens in AWS Secrets Manager (optionally via LocalStack) and persists connector metadata in PostgreSQL. You can also send notifications/messages via Slack channels.
 
 ---
 
-## Setup
+## **Features**
+### **1. Connector Management**
 
-### Buf Installation
+This service also exposes gRPC endpoints defined in connector.proto. Below are some key methods:
 
-Follow the [official Buf installation guide](https://docs.buf.build/installation) for your OS.
-
-### Protobuf Generation
-
-From the repository root, run:
-
-```bash
-buf generate
-```
-
-This will generate Go code into the configured output folder (e.g., `gen/`).
-
-### Docker Compose
-
-Spin up LocalStack and PostgreSQL using the provided docker-compose.yml like this:
-
-```bash
-docker-compose up -d
-```
-
----
-
-## Running the Service
-
-1. Start LocalStack (and Postgres if needed):
-
-   ```bash
-   docker-compose up -d
+- **Create Connector** 
+  **Request (Protobuf):**
+  ```protobuf
+      message CreateConnectorRequest {
+      string workspace_id = 2;
+      string tenant_id = 3;
+      string default_channel_name = 4;
+      string slack_token = 5;
+   }
+   ```
+   **Response (Protobuf):**
+   ```protobuf
+   message CreateConnectorResponse {
+      string id = 1;
+      string workspace_id = 2;
+      string tenant_id = 3;
+      string default_channel_id = 4;
+      string created_at = 5;
+      string updated_at = 6;
+   }
+   ```
+- **Get Connector** 
+  **Request (Protobuf):**
+  ```protobuf
+   message GetConnectorRequest {
+      string connector_id = 1;
+   }
+   ```
+   **Response (Protobuf):**
+   ```protobuf
+   message GetConnectorResponse {
+      string id = 1;
+      string workspace_id = 2;
+      string tenant_id = 3;
+      string default_channel_id = 4;
+      string created_at = 5;
+      string updated_at = 6;
+   }
+   ```
+- **Delete Connector** 
+  **Request (Protobuf):**
+  ```protobuf
+   message DeleteConnectorRequest {
+      string connector_id = 1;
+   }
+   ```
+   **Response (Protobuf):**
+   ```protobuf
+   message DeleteConnectorResponse {
+      bool success = 1;
+   }
    ```
 
-2. Generate protobuf stubs (if you haven’t yet):
+## **Quick Start: Local Development**
 
-   ```bash
+### **1. Clone the Repository**
+```bash
+   git clone https://github.com/iBoBoTi/connector-service.git
+   cd connector-service
+```
+Generate protobuf stubs (if you haven’t yet):
+```bash
    buf generate
-   ```
+```
 
-3. Run the server:
+### **2. Export Environment Variables**
+Export environment variables with your own configuration bearing in mind the system comes with its own default configuration:
+```bash
+   export DB_HOST=db
+   export DB_PORT=5432
+   export DB_USER=aryon
+   export DB_PASSWORD=aryon
+   export DB_NAME=aryondb
+   export AWS_REGION=us-east-1
+   export AWS_ENDPOINT=http://localhost:4566
+   export GRPC_PORT=50051
+```
 
-   ```bash
-   go run go-server/cmd/server/main.go
-   ```
+### **3. Build and Run the Application**
+Use Docker Compose to build and run:
+```bash
+   make start-services
+```
+Spins up PostgreSQL (for connector metadata)
+Spins up LocalStack (for Secrets Manager)
+Builds and starts Slack Connector Service
 
-The service should listen on `:50051` (or another configured port).
+### **4. Run Database Migrations**
+If the service doesn’t automatically run migrations, you can do so manually:
+```bash
+   make migrate-up
+```
+(Adjust the command to your own migration tool, e.g., goose up, migrate up, etc.)
 
----
+### **5. Verify gRPC**
+ Use grpcurl or any gRPC client to test endpoints, e.g.,
+```bash
+grpcurl -plaintext \
+  -d '{"name":"my-connector","workspace_id":"WS123","tenant_id":"TNT123","default_send_channel_name":"#general","slack_token":"valid-token"}' \
+  localhost:50051 connector.v1.SlackConnectorService/CreateConnector
+```
 
-## Bonus
+## **Automated Testing**
+Run unit and integration tests:
+```bash
+`  go test -v -cover ./...
+```
+## **Technologies Used**
+Programming Language: Golang
 
-- Implement Slack OAuthV2 flow for real token retrieval.
-    - Implement gRPC method `GetOAuthV2URL`
-- Expand the connector functionality (attachments, threading, etc.).
+Frameworks/Libraries:
 
----
+gRPC + Buf for Protobuf and code generation
+
+AWS SDK for Secrets Manager (LocalStack in dev)
+
+PostgreSQL driver + migrations
+
+Containerization: Docker, Docker Compose
+
+Testing: Go’s built-in testing framework, plus testify for assertions/mocks

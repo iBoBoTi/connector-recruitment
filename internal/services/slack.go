@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	"github.com/slack-go/slack"
 
@@ -36,7 +35,6 @@ func (c *slackClient) ResolveChannelID(ctx context.Context, token, channelName s
 	for {
 		channels, cursor, err := client.GetConversationsContext(ctx, params)
 
-		slog.Info("I got here 24")
 		if err != nil {
 			return "", fmt.Errorf("failed to list slack channels: %w", err)
 		}
@@ -78,15 +76,19 @@ func SendMessage(
 ) error {
 	connector, err := connectorRepository.GetByID(ctx, connectorID)
 	if err != nil {
-		return fmt.Errorf("get connector: %w", err)
+		return fmt.Errorf("error getting connector: %w", err)
 	}
 
 	token, err := secretsManager.GetSlackToken(ctx, "connector/"+connectorID+"/slack-token")
 	if err != nil {
-		return fmt.Errorf("retrieve secret: %w", err)
+		return fmt.Errorf("error retrieving secret: %w", err)
 	}
 
 	client := slack.New(token)
 	_, _, err = client.PostMessage(connector.DefaultChannelID, slack.MsgOptionText(message, false))
-	return err
+	if err != nil {
+		return fmt.Errorf("error sending message to channel: %w", err)
+	}
+
+	return nil
 }

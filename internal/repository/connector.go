@@ -24,11 +24,14 @@ func NewConnectorRepository(db *sql.DB) ConnectorRepository {
 }
 
 func (cr *connectorRepository) Create(ctx context.Context, c *domain.Connector) error {
-	_, err := cr.db.ExecContext(ctx, `
+	if _, err := cr.db.ExecContext(ctx, `
         INSERT INTO connectors (id, tenant_id, workspace_id, default_channel_id, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6)
-    `, c.ID, c.TenantID, c.WorkspaceID, c.DefaultChannelID, c.CreatedAt, c.UpdatedAt)
-	return err
+    `, c.ID, c.TenantID, c.WorkspaceID, c.DefaultChannelID, c.CreatedAt, c.UpdatedAt); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (cr *connectorRepository) GetByID(ctx context.Context, id string) (*domain.Connector, error) {

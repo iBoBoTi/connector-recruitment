@@ -26,6 +26,29 @@ services:
       - postgres_data:/data/postgres
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     restart: unless-stopped
+  connector-service:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: aryon
+      DB_PASSWORD: aryon
+      DB_NAME: aryondb
+      AWS_REGION: us-east-1
+      AWS_ENDPOINT: http://localstack:4566
+      GRPC_PORT: 50051
+    depends_on:
+      - postgres
+      - localstack
+    ports:
+      - "50051:50051"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:50051"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   localstack_data:

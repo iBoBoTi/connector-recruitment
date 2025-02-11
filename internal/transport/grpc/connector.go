@@ -8,16 +8,17 @@ import (
 	connector_v1 "github.com/iBoBoTi/connector-service/gen/proto"
 	"github.com/iBoBoTi/connector-service/internal/domain"
 	"github.com/iBoBoTi/connector-service/internal/usecase"
+	"github.com/iBoBoTi/connector-service/pkg/errors"
 )
 
 // SlackConnectorHandler implements connector.v1.SlackConnectorServiceServer.
 type SlackConnectorHandler struct {
-	connUsecase *usecase.ConnectorUsecase
+	connUsecase usecase.ConnectorUsecase
 	connector_v1.UnimplementedSlackConnectorServiceServer
 }
 
 // NewSlackConnectorHandler constructs a new gRPC handler instance.
-func NewSlackConnectorHandler(connUC *usecase.ConnectorUsecase) *SlackConnectorHandler {
+func NewSlackConnectorHandler(connUC usecase.ConnectorUsecase) *SlackConnectorHandler {
 	return &SlackConnectorHandler{connUsecase: connUC}
 }
 
@@ -33,7 +34,7 @@ func (h *SlackConnectorHandler) CreateConnector(
 		req.SlackToken,
 	)
 	if err != nil {
-		return nil, err
+		return nil, errors.WrapGRPCError(err)
 	}
 
 	return &connector_v1.CreateConnectorResponse{
@@ -47,7 +48,7 @@ func (h *SlackConnectorHandler) GetConnector(
 ) (*connector_v1.GetConnectorResponse, error) {
 	conn, err := h.connUsecase.GetConnector(ctx, req.ConnectorId)
 	if err != nil {
-		return nil, err
+		return nil, errors.WrapGRPCError(err)
 	}
 	return &connector_v1.GetConnectorResponse{
 		Connector: toProtoConnector(conn),
@@ -59,7 +60,7 @@ func (h *SlackConnectorHandler) DeleteConnector(
 	req *connector_v1.DeleteConnectorRequest,
 ) (*connector_v1.DeleteConnectorResponse, error) {
 	if err := h.connUsecase.DeleteConnector(ctx, req.ConnectorId); err != nil {
-		return nil, err
+		return nil, errors.WrapGRPCError(err)
 	}
 	return &connector_v1.DeleteConnectorResponse{
 		Success: true,
