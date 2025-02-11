@@ -12,6 +12,11 @@ services:
       - localstack_data:/var/lib/localstack
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   postgres:
     image: postgres:17-alpine
@@ -21,27 +26,33 @@ services:
       POSTGRES_USER: aryon
       POSTGRES_PASSWORD: aryon
       POSTGRES_DB: aryondb
-      PGDATA: /data/postgres
     volumes:
       - postgres_data:/data/postgres
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "aryon"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   connector-service:
     build:
       context: .
-      dockerfile: ./docker/Dockerfile
+      dockerfile: ./Dockerfile
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: aryon
       DB_PASSWORD: aryon
       DB_NAME: aryondb
-      AWS_REGION: us-east-1
+      AWS_REGION: us-east-2
       AWS_ENDPOINT: http://localstack:4566
       GRPC_PORT: 50051
     depends_on:
-      - postgres
-      - localstack
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
     ports:
       - "50051:50051"
     healthcheck:

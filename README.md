@@ -123,19 +123,13 @@ Use Docker Compose to build and run:
 Spins up PostgreSQL (for connector metadata)
 Spins up LocalStack (for Secrets Manager)
 Builds and starts Slack Connector Service
+At start up the database migration runs
 
-### **4. Run Database Migrations**
-If the service doesn’t automatically run migrations, you can do so manually:
-```bash
-   make migrate-up
-```
-(Adjust the command to your own migration tool, e.g., goose up, migrate up, etc.)
-
-### **5. Verify gRPC**
+### **4. Verify gRPC**
  Use grpcurl or any gRPC client to test endpoints, e.g.,
 ```bash
 grpcurl -plaintext \
-  -d '{"name":"my-connector","workspace_id":"WS123","tenant_id":"TNT123","default_send_channel_name":"#general","slack_token":"valid-token"}' \
+  -d '{"workspace_id":"WS123","tenant_id":"TNT123","default_send_channel_name":"general","slack_token":"valid-token"}' \
   localhost:50051 connector.v1.SlackConnectorService/CreateConnector
 ```
 
