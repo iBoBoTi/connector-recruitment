@@ -72,6 +72,7 @@ func SendMessage(
 	connectorID string,
 	message string,
 	secretsManager AWSSecretsManager,
+	slackClient SlackClient,
 	connectorRepository repository.ConnectorRepository,
 ) error {
 	connector, err := connectorRepository.GetByID(ctx, connectorID)
@@ -84,11 +85,9 @@ func SendMessage(
 		return fmt.Errorf("error retrieving secret: %w", err)
 	}
 
-	client := slack.New(token)
-	_, _, err = client.PostMessage(connector.DefaultChannelID, slack.MsgOptionText(message, false))
-	if err != nil {
+	if err := slackClient.SendMessage(ctx, token, connector.DefaultChannelID, message); err != nil {
 		return fmt.Errorf("error sending message to channel: %w", err)
 	}
-
+	
 	return nil
 }
